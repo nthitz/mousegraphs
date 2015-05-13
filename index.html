@@ -58,13 +58,17 @@
           y: (mouseY / height) - 0.5,
           time: time
         }
+        var minDistance = 0.005
         // if we have at least one more position, calculate velcity with last position
         if(positions.length > 0) {
           var lastPos = positions[positions.length - 1]
           var dt = time - lastPos.time
           pos.dx = (pos.x - lastPos.x) / dt
           pos.dy = (pos.y - lastPos.y) / dt
-
+          var distanceBetweenPoitns = Math.sqrt(Math.pow(pos.x - lastPos.x, 2) + Math.pow(pos.y - lastPos.y, 2))
+          if(distanceBetweenPoitns < minDistance) {
+            return
+          }
           //similarly do accel
           if(positions.length > 1) {
             // var secondToLast = positions[positions.length - 2]
@@ -98,8 +102,10 @@
             circle(point.x * width, point.y * height, 5, ctxt)
             ctxt.fill()
           })
+          var pctVelocityToDraw = 0.5;
+          var minIndex = Math.max(1, pctVelocityToDraw * positions.length)
           _.each(positions, function(point, index) {
-            if(index < 1) {
+            if(index < minIndex) {
               return
             }
             ctxt.fillStyle = 'rgba(40,180,40,' + opacity + ')'
@@ -107,8 +113,10 @@
             circle(point.dx * width * 100, point.dy * height * 100, 5, ctxt)
             ctxt.fill()
           })
+          var pctAccelToDraw = 0.1;
+          minIndex = Math.max(2, pctAccelToDraw * positions.length)
           _.each(positions, function(point, index) {
-            if(index < 2) {
+            if(index < minIndex) {
               return
             }
             ctxt.fillStyle = 'rgba(40,40,180,' + opacity + ')'
