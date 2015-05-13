@@ -1,0 +1,132 @@
+<html>
+  <head>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+      }
+      canvas {
+        display: block
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/3.8.0/lodash.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script>
+      var COUNT_TO_STORE = 5000;
+      var positions = [];
+      var scale = null;
+      var width, height;
+      var mouseX = 0,
+          mouseY = 0;
+
+      var canvas, ctxt;
+
+      function init() {
+        canvas = d3.select('canvas')
+        ctxt = canvas[0][0].getContext('2d')
+        resize();
+        requestAnimationFrame(animate)
+        $(window).on('mousemove', mousemove)
+          .on('resize', resize)
+      }
+      function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas = canvas.attr('width', width)
+          .attr('height', height)
+
+        scale = Math.min(width, height)
+
+      }
+
+
+
+      function mousemove(event) {
+        mouseX = event.pageX
+        mouseY = event.pageY;
+      }
+
+
+      function storeMouseMove(time) {
+        pos = {
+          x: (mouseX / width) - 0.5,
+          y: (mouseY / height) - 0.5,
+          time: time
+        }
+        // if we have at least one more position, calculate velcity with last position
+        if(positions.length > 0) {
+          var lastPos = positions[positions.length - 1]
+          var dt = time - lastPos.time
+          pos.dx = (pos.x - lastPos.x) / dt
+          pos.dy = (pos.y - lastPos.y) / dt
+
+          //similarly do accel
+          if(positions.length > 1) {
+            // var secondToLast = positions[positions.length - 2]
+            pos.ddx = (pos.dx - lastPos.dx) / dt
+            pos.ddy = (pos.dy - lastPos.dy) / dt
+          }
+        }
+        positions.push(pos)
+        while(positions.length > COUNT_TO_STORE) {
+          positions.shift()
+        }
+      }
+      function animate(time) {
+        requestAnimationFrame(animate)
+        storeMouseMove(time)
+        draw()
+      }
+      function draw() {
+        ctxt.clearRect(0,0, width, height)
+        ctxt.save()
+        ctxt.translate(width/2,height/2)
+        ctxt.fillRect(-5,-5,10,10)
+        var opacity = 0.5
+        var numRotations = 2
+        _.each(_.range(numRotations), function (rotation) {
+          ctxt.save()
+          ctxt.rotate(rotation / numRotations * Math.PI * 2)
+          _.each(positions, function(point) {
+            ctxt.fillStyle = 'rgba(180,40,40,' + opacity + ')'
+            ctxt.beginPath()
+            circle(point.x * width, point.y * height, 5, ctxt)
+            ctxt.fill()
+          })
+          _.each(positions, function(point, index) {
+            if(index < 1) {
+              return
+            }
+            ctxt.fillStyle = 'rgba(40,180,40,' + opacity + ')'
+            ctxt.beginPath()
+            circle(point.dx * width * 100, point.dy * height * 100, 5, ctxt)
+            ctxt.fill()
+          })
+          _.each(positions, function(point, index) {
+            if(index < 2) {
+              return
+            }
+            ctxt.fillStyle = 'rgba(40,40,180,' + opacity + ')'
+            ctxt.beginPath()
+            circle(point.ddx * width * 1000, point.ddy * height * 1000, 5, ctxt)
+            ctxt.fill()
+          })
+          ctxt.restore()
+        })
+
+
+
+        ctxt.restore()
+      }
+      function circle(x,y,r, ctxt) {
+        ctxt.arc(x, y, r, 0, Math.PI * 2)
+      }
+      init()
+    </script>
+  </body>
+</html>
