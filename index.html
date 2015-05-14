@@ -9,6 +9,8 @@
         display: block
       }
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
   </head>
   <body>
     <canvas id="canvas"></canvas>
@@ -31,8 +33,9 @@
         ctxt = canvas[0][0].getContext('2d')
         resize();
         requestAnimationFrame(animate)
-        $(window).on('mousemove', mousemove)
-          .on('resize', resize)
+        document.addEventListener('mousemove', mousemove)
+        document.addEventListener('touchmove', mousemove)
+        window.addEventListener('resize', resize)
       }
       function resize() {
         width = window.innerWidth;
@@ -49,6 +52,7 @@
       function mousemove(event) {
         mouseX = event.pageX
         mouseY = event.pageY;
+        event.preventDefault()
       }
 
 
